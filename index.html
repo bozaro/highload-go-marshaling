@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+	<title>HighLoad++: Go marshaling vs Performance</title>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<link rel="stylesheet" href="shower/themes/ribbon/styles/screen-16x10.css">
+</head>
+<body class="shower list">
+	<header class="caption">
+		<h1>HighLoad++: Go marshaling vs Performance</h1>
+		<p>Кратенько о сериализации объектов и производительности в Go.</p>
+	</header>
+
+	<section class="slide">
+		<h2>Началось всё с производительности...</h2>
+		<p>В какой-то момент пришло осознание, что львиную долю времени сервиса занимает сериализация.</p>
+		<p class="next">После замены <code>MarshalJSON</code>/<code>UnmarshalJSON</code> на <code>tinylib/msgp</code> при кэшировании, утилизация CPU уменьшилась примерно на 25%</p>
+	</section>
+
+	<section class="slide">
+		<h2>В чем проблемы сериализации в Go?</h2>
+		<p>В Go вся сериализация идет через reflection.</p>
+	</section>
+
+	<footer class="badge">
+		<a href="https://github.com/bozaro/highload-go-marshaling">Fork me on GitHub</a>
+	</footer>
+
+	<div class="progress"></div>
+
+	<script src="shower/shower.min.js"></script>
+	<!-- Copyright © 2018 Artem Navrotskiy. -->
+
+</body>
+</html>
