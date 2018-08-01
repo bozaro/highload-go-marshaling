@@ -20,7 +20,110 @@
 
 	<section class="slide">
 		<h2>В чем проблемы сериализации в Go?</h2>
-		<p>В Go вся сериализация идет через reflection.</p>
+		<ol>
+			<li>Вся сериализация идет через reflection;</li>
+			<li>Нет полиморфной сериализации;</li>
+			<li>Не удачный интерфейс кастомной сериализации.</li>
+		</ol>
+	</section>
+
+	<section class="slide">
+		<h2>Вся сериализация идет через reflection</h2>
+		<p>Тут все просто: для простого чтения/записи нужно выполнить кучу дополнительного кода с приведением типов и разименованием указателей.</p>
+	</section>
+
+	<section class="slide">
+		<h2>Нет полиморфной сериализации</h2>
+		<p>Полиморфную десериализацию нужно писать руками, например:</p>
+		<pre><code>
+func (w *FilterConfigWrapper) UnmarshalJSON(data []byte) error {
+	var wrapper struct {
+		Type  string          `json:"type"`
+		Value json.RawMessage `json:"value"`
+	}
+	if err := json.Unmarshal(data, &wrapper); err != nil {
+		return err
+	}
+	switch wrapper.Type {
+	case "regexp":
+		var filter RegexpFilterConfig
+		if err := json.Unmarshal(wrapper.Value, &filter); err != nil {
+			return err
+		}
+		w.FilterConfig = filter
+		return nil
+	// ...
+	default:
+		return errors.New("Unknown polymorph type: " + wrapper.Type)
+	}
+}
+</code></pre>
+	</section>
+
+	<section class="slide">
+		<h2>Нет полиморфной сериализации</h2>
+		<p>К примеру, в Java для полиморфной сериализации нужно:</p>
+		<pre><code>
+TODO
+</code></pre>
+	</section>
+
+	<section class="slide">
+		<h2>Нет полиморфной сериализации</h2>
+		<p>С точки зрения производительности, этот код еще плох тем, что один и тот же исходный документ нужно разбирать несколько раз.</p>
+		<pre><code>
+func (w *FilterConfigWrapper) UnmarshalJSON(data []byte) error {
+	var wrapper struct {
+		Type  string          `json:"type"`
+		Value json.RawMessage `json:"value"`
+	}
+	if err := json.Unmarshal(data, &wrapper); err != nil {
+		return err
+	}
+	switch wrapper.Type {
+	case "regexp":
+		var filter RegexpFilterConfig
+		if err := json.Unmarshal(wrapper.Value, &filter); err != nil {
+			return err
+		}
+		w.FilterConfig = filter
+		return nil
+	// ...
+	default:
+		return errors.New("Unknown polymorph type: " + wrapper.Type)
+	}
+}
+</code></pre>
+	</section>
+
+	<section class="slide">
+		<h2>Не удачный интерфейс кастомной сериализации</h2>
+		<pre><code>
+type Marshaler interface {
+	MarshalJSON() ([]byte, error)
+}
+
+type Unmarshaler interface {
+	UnmarshalJSON([]byte) error
+}
+</code></pre>
+		<ul>
+			<il>Нет возможности протащить контекст;</il>
+			<il>Нет возможности потокового чтения;</il>
+			<il>Множественная десериализация одних и тех же данных.</il>
+		</ul>
+	</section>
+
+	<section>
+		<h2>Решаемые нами проблемы</h2>
+		<p>В результате мы хотели:</p>
+		<ul>
+			<li>Уменьшить накладные расходы на сериализацию;</li>
+			<li>Получить одинаковое поведение для сериализации JSON/BSON/MessagePack;</li>
+			<li>По возможности унифицировать кастомную сериализацию;</li>
+			<li>Решить проблему полиморфной сериализации.</li>
+		</ul>
+		<p class="next">И все эти плюшки с относительно небольшим переписыванием существующего кода.<!-- TODO: Trollface --></p>
 	</section>
 
 	<footer class="badge">
